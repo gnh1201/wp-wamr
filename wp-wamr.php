@@ -16,7 +16,7 @@ function wp_wamr_exec($atts = array(), $content = null, $tag = '') {
 
     $_atts = shortcode_atts(
         array(
-            'filename' => 'test.wasm',
+            'filename' => 'test',
             'function' => '',
             'stacksize' => 0,
             'heapsize' => 0,
@@ -34,6 +34,7 @@ function wp_wamr_exec($atts = array(), $content = null, $tag = '') {
 
     // Build a command line
     $cmd = array();
+    $is_tmpfile = false;
 
     if (file_exists($wamr_bin_path)) {
         array_push($cmd, $wamr_bin_path);
@@ -70,14 +71,19 @@ function wp_wamr_exec($atts = array(), $content = null, $tag = '') {
         }
 
         // Path of WASM binary
-        array_push($cmd, WP_WAMR_PLUGIN_DIR . 'wasm-bin/' . $_atts['filename']);
+        $filepath = wp_media_load_wasm($_atts['filename']);
+        if (empty($filepath)) {
+            $is_tmpfile = true;
+            $filepath = WP_WAMR_PLUGIN_DIR . 'wasm-bin/' . $_atts['filename'];
+        }
+        array_push($cmd, $filepath);
 
         // Add arguments 
         if(!empty($_atts['args'])) {
             array_push($cmd, $_atts['args']);
         }
 
-        // Completed command line
+        // Build a command line
         $_cmd = implode(' ', $cmd);
 
         // Get stdout
@@ -91,6 +97,11 @@ function wp_wamr_exec($atts = array(), $content = null, $tag = '') {
         }
     } else {
         $result .= "[Error] WAMR not found!";
+    }
+    
+    if($is_tmpfile) {
+        @unlink($filepath);
+        @rmdir(substr($filepath, 0, strripos($filepath, '/')));
     }
 
     return $result;
