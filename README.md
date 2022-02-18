@@ -2,7 +2,7 @@
 WebAssembly Micro Runtime (WAMR) for Wordpress
 
 ## Todo
-  * Integrate with Wordpress Media API (Add support upload WASM by WP Media)
+  * Integrate with Wordpress Media API (Add support uploading WASM on WP Media)
 
 ## Source code of WAMR
   * https://github.com/bytecodealliance/wasm-micro-runtime
