@@ -3,7 +3,7 @@
 * Plugin Name: WAMR for Wordpress
 * Description: WebAssembly Micro Runtime (WAMR) for Wordpress
 * Version: 0.1
-* Author: Namhyeon Go, AsmNext
+* Author: AsmNext Team
 * Author URI: https://asmnext.com
 */
 
