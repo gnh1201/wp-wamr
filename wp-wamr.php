@@ -23,7 +23,8 @@ function wp_wamr_exec($atts = array(), $content = null, $tag = '') {
             'repl' => 'false',
             'env' => '',  // query string (e.g. 'key1=value1&key2=value2') 
             'dir' => '',   // comma sperated (e.g. '/mnt/wasi1,/mmt/wasi2')
-            'args' => ''
+            'args' => '',
+            'benchmark' => 'false'
         ), $atts, $tag
     );
 
@@ -63,7 +64,7 @@ function wp_wamr_exec($atts = array(), $content = null, $tag = '') {
             }
         }
 
-        if (!empty($_atts['function'])) {
+        if(!empty($_atts['function'])) {
             array_push($cmd, '--function');
             array_push($cmd, $_atts['function']);   
         }
@@ -72,14 +73,24 @@ function wp_wamr_exec($atts = array(), $content = null, $tag = '') {
         array_push($cmd, WP_WAMR_PLUGIN_DIR . 'wasm-bin/' . $_atts['filename']);
 
         // Add arguments 
-        if (!empty($_atts['args'])) {
+        if(!empty($_atts['args'])) {
             array_push($cmd, $_atts['args']);
         }
 
+        // Completed command line
+        $_cmd = implode(' ', $cmd);
+
         // Get stdout
-        $result = shell_exec(implode(' ', $cmd));
+        if($_atts['benchmark'] == 'true') {
+            $ms = microtime(true);
+            shell_exec($_cmd);
+            $_ms = microtime(true);
+            $result .= "[Benchmark] " . sprintf('%.8fs', ($_ms - $ms)) . " (WASM/Shell)";
+        } else {
+            $result .= shell_exec($_cmd);
+        }
     } else {
-        $result = "[Error] WAMR not found!";
+        $result .= "[Error] WAMR not found!";
     }
 
     return $result;
@@ -100,10 +111,7 @@ function wp_wamr_benchmark() {
     shell_exec('php ' . WP_WAMR_PLUGIN_DIR . 'benchmark/tower_of_hanoi_4disks.php');
     $_ms = microtime(true);
     $result .= "<br>" . sprintf('%.8fs', ($_ms - $ms)) . " (PHP/Shell)";
-    $ms = microtime(true);
-    wp_wamr_exec(array('filename' => 'tower_of_hanoi_4disks.wasm'));
-    $_ms = microtime(true);
-    $result .= "<br>" . sprintf('%.8fs', ($_ms - $ms)) . " (WASM/Shell)";
+    $result .= "<br>" . wp_wamr_exec(array('filename' => 'tower_of_hanoi_4disks.wasm', 'benchmark' => 'true'));
     $result .= "<br>";
 
     // Tower of Hanoi - 8 disks
@@ -116,10 +124,7 @@ function wp_wamr_benchmark() {
     shell_exec('php ' . WP_WAMR_PLUGIN_DIR . 'benchmark/tower_of_hanoi_8disks.php');
     $_ms = microtime(true);
     $result .= "<br>" . sprintf('%.8fs', ($_ms - $ms)) . " (PHP/Shell)";
-    $ms = microtime(true);
-    wp_wamr_exec(array('filename' => 'tower_of_hanoi_8disks.wasm'));
-    $_ms = microtime(true);
-    $result .= "<br>" . sprintf('%.8fs', ($_ms - $ms)) . " (WASM/Shell)";
+    $result .= "<br>" . wp_wamr_exec(array('filename' => 'tower_of_hanoi_8disks.wasm', 'benchmark' => 'true'));
     $result .= "<br>";
 
     // Tower of Hanoi - 16 disks
@@ -132,10 +137,7 @@ function wp_wamr_benchmark() {
     shell_exec('php ' . WP_WAMR_PLUGIN_DIR . 'benchmark/tower_of_hanoi_16disks.php');
     $_ms = microtime(true);
     $result .= "<br>" . sprintf('%.8fs', ($_ms - $ms)) . " (PHP/Shell)";
-    $ms = microtime(true);
-    wp_wamr_exec(array('filename' => 'tower_of_hanoi_16disks.wasm'));
-    $_ms = microtime(true);
-    $result .= "<br>" . sprintf('%.8fs', ($_ms - $ms)) . " (WASM/Shell)";
+    $result .= "<br>" . wp_wamr_exec(array('filename' => 'tower_of_hanoi_16disks.wasm', 'benchmark' => 'true'));
     $result .= "<br>";
 
     // Tower of Hanoi - 20 disks
@@ -148,10 +150,7 @@ function wp_wamr_benchmark() {
     shell_exec('php ' . WP_WAMR_PLUGIN_DIR . 'benchmark/tower_of_hanoi_20disks.php');
     $_ms = microtime(true);
     $result .= "<br>" . sprintf('%.8fs', ($_ms - $ms)) . " (PHP/Shell)";
-    $ms = microtime(true);
-    wp_wamr_exec(array('filename' => 'tower_of_hanoi_20disks.wasm'));
-    $_ms = microtime(true);
-    $result .= "<br>" . sprintf('%.8fs', ($_ms - $ms)) . " (WASM/Shell)";
+    $result .= "<br>" . wp_wamr_exec(array('filename' => 'tower_of_hanoi_20disks.wasm', 'benchmark' => 'true'));
     $result .= "<br>";
 
     // Tower of Hanoi - 24 disks
@@ -164,10 +163,7 @@ function wp_wamr_benchmark() {
     shell_exec('php ' . WP_WAMR_PLUGIN_DIR . 'benchmark/tower_of_hanoi_24disks.php');
     $_ms = microtime(true);
     $result .= "<br>" . sprintf('%.8fs', ($_ms - $ms)) . " (PHP/Shell)";
-    $ms = microtime(true);
-    wp_wamr_exec(array('filename' => 'tower_of_hanoi_24disks.wasm'));
-    $_ms = microtime(true);
-    $result .= "<br>" . sprintf('%.8fs', ($_ms - $ms)) . " (WAMR/Shell)";
+    $result .= "<br>" . wp_wamr_exec(array('filename' => 'tower_of_hanoi_24disks.wasm', 'benchmark' => 'true'));
     $result .= "<br>";
 
     // Tower of Hanoi - 28 disks
@@ -180,10 +176,7 @@ function wp_wamr_benchmark() {
     shell_exec('php ' . WP_WAMR_PLUGIN_DIR . 'benchmark/tower_of_hanoi_28disks.php');
     $_ms = microtime(true);
     $result .= "<br>" . sprintf('%.8fs', ($_ms - $ms)) . " (PHP/Shell)";
-    $ms = microtime(true);
-    wp_wamr_exec(array('filename' => 'tower_of_hanoi_28disks.wasm'));
-    $_ms = microtime(true);
-    $result .= "<br>" . sprintf('%.8fs', ($_ms - $ms)) . " (WASM/Shell)";
+    $result .= "<br>" . wp_wamr_exec(array('filename' => 'tower_of_hanoi_28disks.wasm', 'benchmark' => 'true'));
     $result .= "<br>";
 
     return $result;
