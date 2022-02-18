@@ -225,13 +225,13 @@ function wp_media_load_wasm($filename) {
                 if(file_exists($_filepath)) {
                     $filepath = $_filepath;
                 } else {
-                    echo "[Error] Failed to extract ZIP file";
+                    echo "[Error] Failed to extract ZIP(*.wasm.zip) file";
                 }
             } else {
-                echo "[Error] Invaild ZIP file";
+                echo "[Error] Invaild ZIP(*.wasm.zip) file";
             }
         } else {
-            echo "[Error] No exists WASM (.wasm.zip) file in Media Library";
+            echo "[Error] No exists ZIP(*.wasm.zip) file in Media Library";
         }
     }
 
