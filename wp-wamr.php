@@ -209,7 +209,7 @@ function wp_media_load_wasm($filename) {
         $results = $wpdb->get_results( "select guid from {$wpdb->prefix}posts where post_type = 'attachment' and post_title = '{$filename}.wasm' order by post_date desc limit 1 ", OBJECT );
         foreach($results as $attachment) {
             if ($site_url == substr($attachment->guid, 0, strlen($site_url)) {
-                $old_filepath = $docroot . substr($attachment->guid, strlen($site_url) + 1);
+                $old_filepath = $docroot . substr($attachment->guid, strlen($site_url));
             }
         }
 
