@@ -182,9 +182,43 @@ function wp_wamr_benchmark() {
     return $result;
 }
 
-function wp_media_find_wasm($filename) {
-    //global $wpdb;
-    //$results = $wpdb->get_results( " {$wpdb->prefix} {$filename}.wasm'", OBJECT ); // todo
+function wp_media_load_wasm($filename) {
+    global $wpdb;
+
+    $old_filepath = "";
+    $filepath = "";
+
+    $site_url = site_url();
+    $docroot = realpath($_SERVER["DOCUMENT_ROOT"]);  // ends with slash (/)
+
+    $sys_tmpdir = sys_get_temp_dir();
+    $tmpdir = $sys_tmpdir . '/' . substr(md5(mt_rand()), 0, 7);
+
+    if(mkdir($tmpdir)) {
+        $results = $wpdb->get_results( "select guid from {$wpdb->prefix}posts where post_type = 'attachment' and post_title = '{$filename}.wasm' order by post_date desc limit 1 ", OBJECT );
+        foreach($results as $attachment) {
+            if ($site_url == substr($attachment->guid, 0, strlen($site_url)) {
+                $old_filepath = $docroot . substr($attachment->guid, strlen($site_url) + 1);
+            }
+        }
+
+        // For security reason (Wordpress Security Policy), the media file must be compressed like '.wasm.zip'
+        if (!empty($old_filepath) && file_exists($old_filepath)) {
+            $zip = new ZipArchive();
+            $result = $zip->open();
+            if ($result === TRUE) {
+                $zip->extractTo($tmpdir);
+                $zip->close();
+
+                $_filepath = $tmpdir . '/' . $filename . '.wasm';
+                if(file_exists($_filepath)) {
+                    $filepath = $_filepath;
+                }
+            }
+        }
+    }
+
+    return $filepath;
 }
 
 add_shortcode('wamr_exec', 'wp_wamr_exec');
