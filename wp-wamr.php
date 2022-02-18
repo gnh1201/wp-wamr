@@ -213,7 +213,7 @@ function wp_media_load_wasm($filename) {
             }
         }
 
-        // For security reason (Wordpress Security Policy), the media file must be compressed like '.wasm.zip'
+        // For security reason, the media file must be compressed like '.wasm.zip'
         if (!empty($old_filepath) && file_exists($old_filepath)) {
             $zip = new ZipArchive();
             $result = $zip->open();
@@ -234,4 +234,3 @@ function wp_media_load_wasm($filename) {
 
 add_shortcode('wamr_exec', 'wp_wamr_exec');
 add_shortcode('wamr_benchmark', 'wp_wamr_benchmark');
-
