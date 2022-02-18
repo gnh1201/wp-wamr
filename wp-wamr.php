@@ -9,8 +9,6 @@
 
 define( 'WP_WAMR_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 
-ini_set('max_execution_time', '0');
-
 function wp_wamr_exec($atts = array(), $content = null, $tag = '') {
     $result = "";
 
