@@ -9,5 +9,5 @@ WebAssembly Micro Runtime (WAMR) for Wordpress
   * https://github.com/bytecodealliance/wasm-micro-runtime
 
 ## LICENSE
-  * gnh1201/wp-wamr - BSD-2 License (AsmNext)
+  * gnh1201/wp-wamr -  BSD-2-Clause License (AsmNext)
   * bytecodealliance/wasm-micro-runtime - Apache 2.0 License (Bytecode Alliance)
