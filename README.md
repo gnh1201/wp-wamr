@@ -11,6 +11,9 @@ WebAssembly Micro Runtime (WAMR) for Wordpress
 ## Todo
   * Add support multi-binaries (Following the OS type, the Linux kernel version, the GLIBC version)
 
+## Ultimate goals
+  * Write an Wordpress plugins with C, C++, C#, Python, Go, and more languages
+
 ## Source code of WAMR
   * https://github.com/bytecodealliance/wasm-micro-runtime
 
