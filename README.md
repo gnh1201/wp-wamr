@@ -2,7 +2,7 @@
 WebAssembly Micro Runtime (WAMR) for Wordpress
 
 ## Features
-  * Integrate with Wordpress Media Library - Upload an `something.wasm.zip` file, and use shortcode. For example:
+  * Integrate with Wordpress Media Library - Upload an `something.wasm.zip` file, and use the shortcode.
 
     ```
     [wamr_exec filename="tower_of_hanoi_16disks" benchmark="true"]
