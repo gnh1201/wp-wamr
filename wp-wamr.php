@@ -182,6 +182,11 @@ function wp_wamr_benchmark() {
     return $result;
 }
 
+function wp_media_find_wasm($filename) {
+    //global $wpdb;
+    //$results = $wpdb->get_results( " {$wpdb->prefix} {$filename}.wasm'", OBJECT ); // todo
+}
+
 add_shortcode('wamr_exec', 'wp_wamr_exec');
 add_shortcode('wamr_benchmark', 'wp_wamr_benchmark');
 
