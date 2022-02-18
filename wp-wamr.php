@@ -74,7 +74,7 @@ function wp_wamr_exec($atts = array(), $content = null, $tag = '') {
         $filepath = wp_media_load_wasm($_atts['filename']);
         if (empty($filepath)) {
             $is_tmpfile = true;
-            $filepath = WP_WAMR_PLUGIN_DIR . 'wasm-bin/' . $_atts['filename'];
+            $filepath = WP_WAMR_PLUGIN_DIR . 'wasm-bin/' . $_atts['filename'] . '.wasm';
         }
         array_push($cmd, $filepath);
 
