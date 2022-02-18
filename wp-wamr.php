@@ -72,8 +72,9 @@ function wp_wamr_exec($atts = array(), $content = null, $tag = '') {
 
         // Path of WASM binary
         $filepath = wp_media_load_wasm($_atts['filename']);
-        if (empty($filepath)) {
+        if (!empty($filepath)) {
             $is_tmpfile = true;
+        } else {
             $filepath = WP_WAMR_PLUGIN_DIR . 'wasm-bin/' . $_atts['filename'] . '.wasm';
         }
         array_push($cmd, $filepath);
@@ -98,7 +99,8 @@ function wp_wamr_exec($atts = array(), $content = null, $tag = '') {
     } else {
         $result .= "[Error] WAMR not found!";
     }
-    
+
+    // Remove WASM file 
     if($is_tmpfile) {
         @unlink($filepath);
         @rmdir(substr($filepath, 0, strripos($filepath, '/')));
@@ -119,7 +121,7 @@ function wp_wamr_benchmark() {
     $_ms = microtime(true);
     $result .= "<br>" . sprintf('%.8fs', ($_ms - $ms)) . " (PHP/Native)";
     $ms = microtime(true);
-    shell_exec('php ' . WP_WAMR_PLUGIN_DIR . 'benchmark/tower_of_hanoi_4disks.php');
+    shell_exec('php ' . WP_WAMR_PLUGIN_DIR . 'benchmark/tower_of_hanoi_4disks');
     $_ms = microtime(true);
     $result .= "<br>" . sprintf('%.8fs', ($_ms - $ms)) . " (PHP/Shell)";
     $result .= "<br>" . wp_wamr_exec(array('filename' => 'tower_of_hanoi_4disks.wasm', 'benchmark' => 'true'));
@@ -132,10 +134,10 @@ function wp_wamr_benchmark() {
     $_ms = microtime(true);
     $result .= "<br>" . sprintf('%.8fs', ($_ms - $ms)) . " (PHP/Native)";
     $ms = microtime(true);
-    shell_exec('php ' . WP_WAMR_PLUGIN_DIR . 'benchmark/tower_of_hanoi_8disks.php');
+    shell_exec('php ' . WP_WAMR_PLUGIN_DIR . 'benchmark/tower_of_hanoi_8disks');
     $_ms = microtime(true);
     $result .= "<br>" . sprintf('%.8fs', ($_ms - $ms)) . " (PHP/Shell)";
-    $result .= "<br>" . wp_wamr_exec(array('filename' => 'tower_of_hanoi_8disks.wasm', 'benchmark' => 'true'));
+    $result .= "<br>" . wp_wamr_exec(array('filename' => 'tower_of_hanoi_8disks', 'benchmark' => 'true'));
     $result .= "<br>";
 
     // Tower of Hanoi - 16 disks
@@ -148,7 +150,7 @@ function wp_wamr_benchmark() {
     shell_exec('php ' . WP_WAMR_PLUGIN_DIR . 'benchmark/tower_of_hanoi_16disks.php');
     $_ms = microtime(true);
     $result .= "<br>" . sprintf('%.8fs', ($_ms - $ms)) . " (PHP/Shell)";
-    $result .= "<br>" . wp_wamr_exec(array('filename' => 'tower_of_hanoi_16disks.wasm', 'benchmark' => 'true'));
+    $result .= "<br>" . wp_wamr_exec(array('filename' => 'tower_of_hanoi_16disks', 'benchmark' => 'true'));
     $result .= "<br>";
 
     // Tower of Hanoi - 20 disks
@@ -161,7 +163,7 @@ function wp_wamr_benchmark() {
     shell_exec('php ' . WP_WAMR_PLUGIN_DIR . 'benchmark/tower_of_hanoi_20disks.php');
     $_ms = microtime(true);
     $result .= "<br>" . sprintf('%.8fs', ($_ms - $ms)) . " (PHP/Shell)";
-    $result .= "<br>" . wp_wamr_exec(array('filename' => 'tower_of_hanoi_20disks.wasm', 'benchmark' => 'true'));
+    $result .= "<br>" . wp_wamr_exec(array('filename' => 'tower_of_hanoi_20disks', 'benchmark' => 'true'));
     $result .= "<br>";
 
     // Tower of Hanoi - 24 disks
@@ -174,7 +176,7 @@ function wp_wamr_benchmark() {
     shell_exec('php ' . WP_WAMR_PLUGIN_DIR . 'benchmark/tower_of_hanoi_24disks.php');
     $_ms = microtime(true);
     $result .= "<br>" . sprintf('%.8fs', ($_ms - $ms)) . " (PHP/Shell)";
-    $result .= "<br>" . wp_wamr_exec(array('filename' => 'tower_of_hanoi_24disks.wasm', 'benchmark' => 'true'));
+    $result .= "<br>" . wp_wamr_exec(array('filename' => 'tower_of_hanoi_24disks', 'benchmark' => 'true'));
     $result .= "<br>";
 
     // Tower of Hanoi - 28 disks
@@ -187,7 +189,7 @@ function wp_wamr_benchmark() {
     shell_exec('php ' . WP_WAMR_PLUGIN_DIR . 'benchmark/tower_of_hanoi_28disks.php');
     $_ms = microtime(true);
     $result .= "<br>" . sprintf('%.8fs', ($_ms - $ms)) . " (PHP/Shell)";
-    $result .= "<br>" . wp_wamr_exec(array('filename' => 'tower_of_hanoi_28disks.wasm', 'benchmark' => 'true'));
+    $result .= "<br>" . wp_wamr_exec(array('filename' => 'tower_of_hanoi_28disks', 'benchmark' => 'true'));
     $result .= "<br>";
 
     return $result;
@@ -208,7 +210,7 @@ function wp_media_load_wasm($filename) {
     if(mkdir($tmpdir)) {
         $results = $wpdb->get_results( "select guid from {$wpdb->prefix}posts where post_type = 'attachment' and post_title = '{$filename}.wasm' order by post_date desc limit 1 ", OBJECT );
         foreach($results as $attachment) {
-            if ($site_url == substr($attachment->guid, 0, strlen($site_url)) {
+            if ($site_url == substr($attachment->guid, 0, strlen($site_url))) {
                 $old_filepath = $docroot . substr($attachment->guid, strlen($site_url));
             }
         }
@@ -216,15 +218,17 @@ function wp_media_load_wasm($filename) {
         // For security reason, the media file must be compressed like '.wasm.zip'
         if (!empty($old_filepath) && file_exists($old_filepath)) {
             $zip = new ZipArchive();
-            $result = $zip->open();
+            $result = $zip->open($old_filepath);
             if ($result === TRUE) {
-                $zip->extractTo($tmpdir);
+                $zip->extractTo($tmpdir . '/');
                 $zip->close();
 
                 $_filepath = $tmpdir . '/' . $filename . '.wasm';
                 if(file_exists($_filepath)) {
                     $filepath = $_filepath;
                 }
+            } else {
+                echo "[Error] Could not open zip file";
             }
         }
     }
