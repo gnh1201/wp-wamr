@@ -1,5 +1,5 @@
 # wp-wamr
-WebAssembly Micro Runtime (WAMR) for Wordpress (Motivated from BusyBox)
+WebAssembly Micro Runtime (WAMR) for Wordpress - Motivated from BusyBox
 
 ## Features
   * Integrate with Wordpress Media Library - Upload an `something-package-1.zip` file, and use the shortcode.
