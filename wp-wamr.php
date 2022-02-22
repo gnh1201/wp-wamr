@@ -2,7 +2,7 @@
 /*
 * Plugin Name: WAMR for Wordpress
 * Description: WebAssembly Micro Runtime (WAMR) for Wordpress
-* Version: 0.1
+* Version: 0.2
 * Author: AsmNext Team
 * Author URI: https://asmnext.com
 */
@@ -14,6 +14,7 @@ function wp_wamr_exec($atts = array(), $content = null, $tag = '') {
 
     $_atts = shortcode_atts(
         array(
+            'packagename' => '',
             'filename' => 'test',
             'function' => '',
             'stacksize' => 0,
@@ -69,10 +70,8 @@ function wp_wamr_exec($atts = array(), $content = null, $tag = '') {
         }
 
         // Path of WASM binary
-        $filepath = wp_media_load_wasm($_atts['filename']);
-        if (!empty($filepath)) {
-            $is_tmpfile = true;
-        } else {
+        $filepath = wp_wamr_load_media($_atts['filename'], $_atts['packagename']);
+        if (empty($filepath)) {
             $filepath = WP_WAMR_PLUGIN_DIR . 'wasm-bin/' . $_atts['filename'] . '.wasm';
         }
         array_push($cmd, $filepath);
@@ -99,12 +98,26 @@ function wp_wamr_exec($atts = array(), $content = null, $tag = '') {
     }
 
     // Remove WASM file 
-    if($is_tmpfile) {
-        @unlink($filepath);
-        @rmdir(substr($filepath, 0, strripos($filepath, '/')));
+    $sys_tmpdir = sys_get_temp_dir();
+    $targets = glob($sys_tmpdir . "/wp-wamr-*");
+    foreach($targets as $target) {
+        wp_wamr_clean($target);
     }
 
     return $result;
+}
+
+function wp_wamr_clean($target) {
+    $_targets = glob("$target/*");
+    foreach($_targets as $_target) {
+        if (is_dir($_target)) {
+            wp_wamr_clean($_target);
+            rmdir($_target);
+        } else {
+            unlink($_target);
+        }
+    }
+    rmdir($target);
 }
 
 function wp_wamr_benchmark() {
@@ -193,7 +206,55 @@ function wp_wamr_benchmark() {
     return $result;
 }
 
-function wp_media_load_wasm($filename) {
+function wp_wamr_verify_checksum($basedir, $filename) {
+    // Check exists target file
+    $filepath = $basedir . '/' . $filename . '.wasm';
+    if (!file_exists($filepath)) {
+        echo "[Error] Does not exists target file";
+    }
+
+    // Check exists MD5SUM file
+    $checksum_index = -1;
+    $checksum_file = '';
+    $checksum_possibles = array(
+        $basedir . '/MD5SUM',
+        $basedir . '/md5sum',
+        $basedir . '/SHA1SUM',
+        $basedir . '/sha1sum'
+    );
+    for ($i = 0; $i < count($checksum_possibles); $i++) {
+        if (file_exists($checksum_possibles[$i])) {
+            $checksum_index = $i;
+            $checksum_file = $checksum_possibles[$checksum_index];
+            break;
+        }
+    }
+
+    // If could not find
+    if ($hashinfo_index < 0) {
+        echo "[Error] Does not exists the checksum file";
+        return false;
+    }
+
+    // Open the MD5SUM file
+    $contents = fread(fopen($checksum_file, 'r'), filesize($checksum_file));
+
+    // Parse MD5SUM contents
+    $segments = preg_split('/[\s]+/', $contents);
+
+    // Calcuate file hash
+    $checksum = '';
+    if (strpos(strtoupper($checksum_file), "MD5SUM") !== false) {
+        $checksum = md5_file($filepath);
+    } else if (strpos(strtoupper($checksum_file), "SHA1SUM") !== false) {
+        $checksum = sha1_file($filepath);
+    }
+
+    // Is it verified?
+    return !empty($checksum) ? in_array($checksum, $segments) : false;
+}
+
+function wp_wamr_load_media($filename, $packagename) {
     global $wpdb;
 
     $old_filepath = "";
@@ -203,17 +264,19 @@ function wp_media_load_wasm($filename) {
     $docroot = realpath($_SERVER["DOCUMENT_ROOT"]);  // ends with slash (/)
 
     $sys_tmpdir = sys_get_temp_dir();
-    $tmpdir = $sys_tmpdir . '/' . substr(md5(mt_rand()), 0, 7);
+    $tmpdir = $sys_tmpdir . '/wp-wamr-' . substr(md5(mt_rand()), 0, 7);
 
     if(mkdir($tmpdir)) {
-        $results = $wpdb->get_results( "select guid from {$wpdb->prefix}posts where post_type = 'attachment' and post_title = '{$filename}.wasm' order by post_date desc limit 1 ", OBJECT );
+        $results = $wpdb->get_results( "select guid from {$wpdb->prefix}posts
+             where post_type = 'attachment' and post_title = '{$packagename}'
+             order by post_date desc limit 1" , OBJECT );
         foreach($results as $attachment) {
             if ($site_url == substr($attachment->guid, 0, strlen($site_url))) {
                 $old_filepath = $docroot . substr($attachment->guid, strlen($site_url));
             }
         }
 
-        // For security reason, the media file must be compressed like '*.wasm.zip'
+        // For security reason, the media file must be compressed like '*.zip'
         if (!empty($old_filepath) && file_exists($old_filepath)) {
             $zip = new ZipArchive();
             $result = $zip->open($old_filepath);
@@ -222,16 +285,16 @@ function wp_media_load_wasm($filename) {
                 $zip->close();
 
                 $_filepath = $tmpdir . '/' . $filename . '.wasm';
-                if(file_exists($_filepath)) {
+                if(file_exists($_filepath) && wp_wamr_verify_checksum($tmpdir, $filename)) {
                     $filepath = $_filepath;
                 } else {
-                    echo "[Error] Failed to extract ZIP(*.wasm.zip) file";
+                    echo "[Error] Failed to verify the checksum of WASM file";
                 }
             } else {
-                echo "[Error] Invaild ZIP(*.wasm.zip) file";
+                echo "[Error] Invaild package file";
             }
         } else {
-            echo "[Error] No exists ZIP(*.wasm.zip) file in Media Library";
+            echo "[Error] No exists package file in Media Library";
         }
     }
 
