@@ -14,6 +14,7 @@ function wp_wamr_exec($atts = array(), $content = null, $tag = '') {
 
     $_atts = shortcode_atts(
         array(
+            'package' => '',
             'filename' => 'test',
             'function' => '',
             'stacksize' => 0,
@@ -69,7 +70,7 @@ function wp_wamr_exec($atts = array(), $content = null, $tag = '') {
         }
 
         // Path of WASM binary
-        $filepath = wp_media_load_wasm($_atts['filename']);
+        $filepath = wp_wamr_load_media($_atts['filename'], $_atts['package']);
         if (!empty($filepath)) {
             $is_tmpfile = true;
         } else {
@@ -193,7 +194,49 @@ function wp_wamr_benchmark() {
     return $result;
 }
 
-function wp_media_load_wasm($filename) {
+function wp_wamr_verify_md5($basedir, $filename) {
+    // Check exists target file
+    $filepath = $basedir . '/' . $filename . '.wasm';
+    if (!file_exists($filepath)) {
+        echo "[Error] Does not exists target file";
+    }
+
+    // Calculate MD5 hash
+    $hash = md5_file($filepath);
+
+    // Check exists MD5SUM file
+    $md5sum_index = -1;
+    $md5sum_possibles = array( $basedir . '/MD5SUM', $basedir . '/md5sum' );
+    for ($i = 0; $i < count($md5sum_possibles); $i++) {
+        if (file_exists($md5sum_possibles[$i])) {
+            $md5sum_index = $i;
+        }
+    }
+    if ($md5sum_index < 0) {
+        echo "[Error] Does not exists MD5SUM file";
+    }
+
+    // Open the MD5SUM file
+    $handle = fopen($md5sum_possibles[$i], "rb");
+    if (FALSE === $handle) {
+        echo "[Error] Failed to open MD5SUM file";
+    }
+
+    // Read contents of the MD5SUM file
+    $contents = '';
+    while (!feof($handle)) {
+        $contents .= fread($handle, 8192);
+    }
+    fclose($handle);
+
+    // Parse MD5SUM contents
+    $segments = preg_split('/[\s]+/', $contents);
+
+    // Is it verified?
+    return in_array($hash, $segments);
+}
+
+function wp_wamr_load_media($filename, $package) {
     global $wpdb;
 
     $old_filepath = "";
@@ -206,7 +249,9 @@ function wp_media_load_wasm($filename) {
     $tmpdir = $sys_tmpdir . '/' . substr(md5(mt_rand()), 0, 7);
 
     if(mkdir($tmpdir)) {
-        $results = $wpdb->get_results( "select guid from {$wpdb->prefix}posts where post_type = 'attachment' and post_title = '{$filename}.wasm' order by post_date desc limit 1 ", OBJECT );
+        $results = $wpdb->get_results( "select guid from {$wpdb->prefix}posts
+             where post_type = 'attachment' and post_title = '{$package}'
+             order by post_date desc limit 1" , OBJECT );
         foreach($results as $attachment) {
             if ($site_url == substr($attachment->guid, 0, strlen($site_url))) {
                 $old_filepath = $docroot . substr($attachment->guid, strlen($site_url));
@@ -222,16 +267,16 @@ function wp_media_load_wasm($filename) {
                 $zip->close();
 
                 $_filepath = $tmpdir . '/' . $filename . '.wasm';
-                if(file_exists($_filepath)) {
+                if(file_exists($_filepath) && wp_wamr_verify_md5($tmpdir, $filename)) {
                     $filepath = $_filepath;
                 } else {
-                    echo "[Error] Failed to extract ZIP(*.wasm.zip) file";
+                    echo "[Error] Failed to verify WASM file";
                 }
             } else {
-                echo "[Error] Invaild ZIP(*.wasm.zip) file";
+                echo "[Error] Invaild package file";
             }
         } else {
-            echo "[Error] No exists ZIP(*.wasm.zip) file in Media Library";
+            echo "[Error] No exists package file in Media Library";
         }
     }
 
