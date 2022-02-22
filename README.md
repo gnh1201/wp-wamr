@@ -7,7 +7,10 @@ WebAssembly Micro Runtime (WAMR) for Wordpress
     ```
     [wamr_exec packagename="something-package-1" filename="tower_of_hanoi_16disks" benchmark="true"]
     ```
-    The ZIP file must have an `MD5SUM` or `SHA1SUM` file.
+
+  * Check a file integrity
+
+    The package file must have an `MD5SUM` or `SHA1SUM` file.
 
 ## Todo
   * Add support multi-binaries (Following the OS type, the Linux kernel version, the GLIBC version)
