@@ -18,8 +18,9 @@ WebAssembly Micro Runtime (WAMR) for Wordpress - Motivated from [BusyBox](https:
 ## Ultimate goals
   * Write a Wordpress plugins with C, C++, C#, Python, Go, Rust, and more languages
 
-## Source code of WAMR
+## Runtime source code and build (WAMR)
   * https://github.com/bytecodealliance/wasm-micro-runtime
+  * https://gist.github.com/gnh1201/b9c4ee4a98fbb369237b3e447a9550a2
 
 ## LICENSE
   * gnh1201/wp-wamr -  BSD-2-Clause License (AsmNext)
