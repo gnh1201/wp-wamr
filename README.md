@@ -1,8 +1,8 @@
 # wp-wamr
 WebAssembly Micro Runtime (WAMR) for Wordpress - Motivated from [BusyBox](https://busybox.net/)
 
-## Corver (Low-level Developer)
-![Corver](src/img/wp-wamr_corver.jpg)
+## Cover (Low-level Developer)
+![Cover](src/img/wp-wamr_cover.jpg)
 
 
 ## Features
