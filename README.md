@@ -2,7 +2,8 @@
 WebAssembly Micro Runtime (WAMR) for Wordpress - Motivated from [BusyBox](https://busybox.net/)
 
 ## Corver (Low-level Developer)
-![Corver](src/images/wp-wamr_corver.jpg)
+![Corver](src/img/wp-wamr_corver.jpg)
+
 
 ## Features
   * Integrate with Wordpress Media Library - Upload an `something-package-1.zip` file, and use the shortcode.
