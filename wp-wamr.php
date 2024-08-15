@@ -260,8 +260,24 @@ function wp_wamr_load_media($filename, $packagename) {
     $old_filepath = "";
     $filepath = "";
 
+    // The following code is used to retrieve and store the site URL in the variable $site_url. 
+    // This URL is the root URL of the WordPress site, which is essential for building paths or links relative to the site's base.
+    //
+    // REAL PATH: /var/www/html/wordpress/wp-content/plugins
+    // The directory path provided here represents the actual file system path where the WordPress plugins are stored.
+    //
+    // It's important to understand that the real path may differ from the site's URL. The real path refers to the location on the server's filesystem,
+    // while the URL (provided by site_url()) is what users access via their web browsers.
+    //
+    // To ensure consistency between the URL and the server's file structure, the following line of code retrieves the document root directory of the server,
+    // appends '/wordpress' to it, and assigns it to the $docroot variable.
+    //
+    // $docroot will store the full absolute path to the root of the WordPress installation on the server, 
+    // which is necessary for performing file operations or linking resources correctly.
+    //
+    // Note: The realpath() function is used to resolve any symbolic links, '..' or '.' in the path, ensuring that $docroot contains the correct and absolute path.
     $site_url = site_url();
-    $docroot = realpath($_SERVER["DOCUMENT_ROOT"]);  // ends with slash (/)
+    $docroot = realpath($_SERVER["DOCUMENT_ROOT"]) . '/wordpress'; // ends with a slash (/) + '/wordpress'
 
     $sys_tmpdir = sys_get_temp_dir();
     $tmpdir = $sys_tmpdir . '/wp-wamr-' . substr(md5(mt_rand()), 0, 7);
